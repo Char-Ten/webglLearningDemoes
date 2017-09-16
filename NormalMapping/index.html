@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link rel="stylesheet" href="./index/index.css">
+</head>
+
+<body>
+    <div id="app">
+        <header id="app-hd">
+            <h1>
+                法线贴图在线生成器
+                <span class="app-hd__vision">v 0.0.1</span>
+            </h1>
+        </header>
+        <section id="app-bd">
+            <div id="uploaderBox" class="app-bd__uploader">
+                <label class="uploader__lable">
+                    选择一张贴图
+                    <input id="uploader" type="file"/>
+                </label>
+            </div>
+            <div class="app-bd__mn">
+                <aside class="mn__sd" id="aSide">
+                    <div id="aSideContent" class="scroll-bar__content"></div>
+                </aside>
+                <section class="mn__ct" id="main">
+                </section>
+        </section>
+        </div>
+        <footer id="app-ft"></footer>
+    </div>
+    <script src="./index/index.js"></script>
+</body>
+
+</html>

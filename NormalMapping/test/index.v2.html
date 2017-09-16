@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        var o = {
+            /**纹理图片*/
+            image: new Image(),
+
+            /**法线图片*/
+            nmo: document.createElement('canvas'),
+
+            /**光照黑白图*/
+            dlimg: document.createElement('canvas'),
+
+            /**离屏canvas*/
+            outCvs: document.createElement('canvas'),
+        }
+        var ctx = {
+            nmoGl: o.nmo.getContext('webgl'),
+            out2D: o.outCvs.getContext('2d')
+        }
+
+        var light = {
+            x: 0.0,
+            y: 0.0,
+            z: 0.1,
+            w: 5
+        }
+
+        var sts = {
+            renderLightGray: false
+        }
+
+        var program = null;
+
+        o.image.onload = function() {
+            o.nmo.width = o.outCvs.width = this.width;
+            o.nmo.height = o.outCvs.height = this.height;
+            light.x = this.width / 2;
+            light.y = this.height / 2;
+            ctx.nmoGl.viewport(0, 0, this.width, this.height);
+            reqUseProgram(ctx.nmoGl, '/index/shader/nmo_v.glsl', '/index/shader/nmo_f.glsl', renderNmo)
+        }
+
+        o.nmo.style.cursor = "none";
+
+        o.image.src = '/img/t3.png';
+
+        o.nmo.addEventListener('mousemove', function(e) {
+            light.x = (e.clientX - e.target.offsetLeft);
+            light.y = (e.clientY - e.target.offsetTop);
+            if (sts.renderLightGray) {
+                var gl = ctx.nmoGl;
+                bindLightGrayUniform(gl);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            }
+        });
+        o.nmo.addEventListener('touchmove', function(e) {
+            e.preventDefault();
+            light.x = (e.touches[0].pageX - e.target.offsetLeft);
+            light.y = (e.touches[0].pageY - e.target.offsetTop);
+            if (sts.renderLightGray) {
+                var gl = ctx.nmoGl;
+                bindLightGrayUniform(gl);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            }
+        });
+
+        function renderNmo() {
+            var gl = ctx.nmoGl;
+            createVerticesBuffer(gl);
+            createTexByImage(gl, o.image);
+            gl.activeTexture(gl.TEXTURE0);
+            gl.uniform1i(gl.getUniformLocation(program, 'u_Sampler'), 0);
+            gl.uniform2f(gl.getUniformLocation(program, 'u_step'), 1.0 / o.nmo.width, 1.0 / o.nmo.height)
+            gl.clearColor(0.0, 0.0, 0.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+            ctx.out2D.drawImage(o.nmo, 0, 0);
+            document.body.appendChild(o.nmo);
+            document.body.appendChild(o.outCvs);
+
+            reqUseProgram(gl, '/index/shader/nmo_v.glsl', '/index/shader/light_f.glsl', renderLightGray)
+
+        }
+
+        function renderLightGray() {
+            var gl = ctx.nmoGl;
+            var stepX = 1.0 / o.nmo.width;
+            var stepY = 1.0 / o.nmo.height;
+            var lightR = calcLightR(light, o.nmo.width, o.nmo.height);
+            createVerticesBuffer(gl);
+
+            gl.activeTexture(gl.TEXTURE0);
+            createTexByImage(gl, o.image);
+
+            gl.activeTexture(gl.TEXTURE1);
+            createTexByImage(gl, o.outCvs);
+
+            bindLightGrayUniform(gl);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+            sts.renderLightGray = true;
+        }
+
+        function bindLightGrayUniform(gl) {
+            var stepX = 1.0 / o.nmo.width;
+            var stepY = 1.0 / o.nmo.height;
+            gl.uniform1i(gl.getUniformLocation(program, 'u_Sampler_0'), 0);
+            gl.uniform1i(gl.getUniformLocation(program, 'u_Sampler_1'), 1);
+            gl.uniform2f(gl.getUniformLocation(program, 'u_step'), 1.0 / o.nmo.width, 1.0 / o.nmo.height);
+            gl.uniform2f(gl.getUniformLocation(program, 'u_resolution'), o.nmo.width, o.nmo.height)
+            gl.uniform3f(gl.getUniformLocation(program, 'u_light'), light.x * stepX, 1.0 - light.y * stepY, light.z);
+        }
+
+        function createTexByImage(webgl, image) {
+            var texture = webgl.createTexture();
+            webgl.bindTexture(webgl.TEXTURE_2D, texture);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, image);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
+            return texture
+        }
+
+        function reqUseProgram(webgl, vUrl, fUrl, callback) {
+            program = webgl.createProgram();
+            var isFin = 0;
+            req(vUrl, webgl.VERTEX_SHADER);
+            req(fUrl, webgl.FRAGMENT_SHADER);
+
+            function req(url, shaderType) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('get', url, true);
+                xhr.onload = function() {
+                    var shader = webgl.createShader(shaderType);
+                    webgl.shaderSource(shader, xhr.responseText);
+                    webgl.compileShader(shader);
+                    webgl.attachShader(program, shader);
+                    isFin++;
+                    if (isFin === 2) {
+                        webgl.linkProgram(program);
+                        webgl.useProgram(program);
+                        callback(webgl)
+                    }
+                };
+                xhr.send();
+            }
+        }
+
+        function createVerticesBuffer(webgl) {
+            var vertices = [1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0];
+            var verticesBuffer = new Float32Array(vertices);
+
+            var buffer = webgl.createBuffer();
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, buffer);
+            webgl.bufferData(webgl.ARRAY_BUFFER, verticesBuffer, webgl.STATIC_DRAW);
+
+            var vec4Position = null;
+            webgl.bindAttribLocation(program, vec4Position, 'a_Position');
+            webgl.enableVertexAttribArray(vec4Position);
+            webgl.vertexAttribPointer(vec4Position, 2, webgl.FLOAT, false, 0, 0);
+            return buffer;
+        }
+
+        function calcLightR(light, w, h) {
+            var z = light.z;
+            var w = light.w;
+            var r = Math.sqrt(
+                Math.pow(w, 2) - Math.pow(z, 2)
+            );
+            var rx = r / w;
+            var ry = r / h;
+            if (rx > 1) rx = 1;
+            if (ry > 1) ry = 1;
+            return [rx, ry]
+        }
+    </script>
+</body>
+
+</html>

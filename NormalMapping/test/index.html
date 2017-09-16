@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <script>
+        var cvs = document.createElement('canvas');
+        var webgl = cvs.getContext('webgl');
+        var image = new Image();
+        var program = null;
+        var nmo = null;
+
+        image.onload = imageLoad;
+        image.src = '/img/t3.png'
+
+        function imageLoad() {
+            cvs.width = this.width;
+            cvs.height = this.height;
+            webgl.viewport(0, 0, cvs.width, cvs.height);
+            reqUseProgram(webgl, '/index/shader/nmo_v.glsl', '/index/shader/nmo_f.glsl', render)
+        }
+
+        function render(webgl) {
+            var vertices = [1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0];
+            var verticesBuffer = new Float32Array(vertices);
+            var FSIZE = verticesBuffer.BYTES_PER_ELEMENT;
+
+            var buffer = webgl.createBuffer();
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, buffer);
+            webgl.bufferData(webgl.ARRAY_BUFFER, verticesBuffer, webgl.STATIC_DRAW);
+
+            var vec4Position = null;
+            webgl.bindAttribLocation(program, vec4Position, 'a_Position');
+            webgl.enableVertexAttribArray(vec4Position);
+            webgl.vertexAttribPointer(vec4Position, 2, webgl.FLOAT, false, 0, 0);
+
+            var tex = createTextrueByImage(webgl, image);
+            webgl.activeTexture(webgl.TEXTURE0);
+            webgl.uniform1i(webgl.getUniformLocation(program, 'u_Sampler'), 0);
+            webgl.uniform2f(webgl.getUniformLocation(program, 'u_step'), 1.0 / cvs.width, 1.0 / cvs.height)
+            webgl.clearColor(0.0, 0.0, 0.0, 1.0);
+            webgl.clear(webgl.COLOR_BUFFER_BIT);
+            webgl.drawArrays(webgl.TRIANGLE_STRIP, 0, 4);
+
+            document.body.appendChild(cvs)
+            createLE();
+        }
+
+        function createLE() {
+            nmo = document.createElement('canvas');
+            nmo.width = cvs.width;
+            nmo.height = cvs.height;
+
+            var nmoCtx2d = nmo.getContext('2d');
+            nmoCtx2d.drawImage(cvs, 0, 0);
+            document.body.appendChild(nmo);
+
+            webgl.clear(webgl.COLOR_BUFFER_BIT);
+            reqUseProgram(webgl, '/index/shader/nmo_v.glsl', '/index/shader/light_f.glsl', renderLE)
+        }
+
+        function renderLE(webgl) {
+            var vertices = [1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0];
+            var verticesBuffer = new Float32Array(vertices);
+
+            var buffer = webgl.createBuffer();
+            webgl.bindBuffer(webgl.ARRAY_BUFFER, buffer);
+            webgl.bufferData(webgl.ARRAY_BUFFER, verticesBuffer, webgl.STATIC_DRAW);
+
+            var vec4Position = null;
+            webgl.bindAttribLocation(program, vec4Position, 'a_Position');
+            webgl.enableVertexAttribArray(vec4Position);
+            webgl.vertexAttribPointer(vec4Position, 2, webgl.FLOAT, false, 0, 0);
+
+            var tex = createTextrueByImage(webgl, nmo);
+            webgl.activeTexture(webgl.TEXTURE0);
+            webgl.uniform1i(webgl.getUniformLocation(program, 'u_Sampler'), 0);
+            webgl.clearColor(0.0, 0.0, 0.0, 1.0);
+            webgl.clear(webgl.COLOR_BUFFER_BIT);
+            webgl.drawArrays(webgl.TRIANGLE_STRIP, 0, 4);
+        }
+
+        function createTextrueByImage(webgl, img) {
+            webgl.activeTexture(webgl.TEXTURE0);
+            var texture = webgl.createTexture();
+            webgl.bindTexture(webgl.TEXTURE_2D, texture);
+            webgl.texImage2D(webgl.TEXTURE_2D, 0, webgl.RGBA, webgl.RGBA, webgl.UNSIGNED_BYTE, img);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MIN_FILTER, webgl.NEAREST);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_MAG_FILTER, webgl.NEAREST);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_S, webgl.CLAMP_TO_EDGE);
+            webgl.texParameteri(webgl.TEXTURE_2D, webgl.TEXTURE_WRAP_T, webgl.CLAMP_TO_EDGE);
+            return texture
+        }
+
+        function reqUseProgram(webgl, vUrl, fUrl, callback) {
+            program = webgl.createProgram();
+            var isFin = 0;
+            req(vUrl, webgl.VERTEX_SHADER);
+            req(fUrl, webgl.FRAGMENT_SHADER);
+
+            function req(url, shaderType) {
+                var xhr = new XMLHttpRequest();
+                xhr.open('get', url, true);
+                xhr.onload = function() {
+                    var shader = webgl.createShader(shaderType);
+                    webgl.shaderSource(shader, xhr.responseText);
+                    webgl.compileShader(shader);
+                    webgl.attachShader(program, shader);
+                    isFin++;
+                    if (isFin === 2) {
+                        webgl.linkProgram(program);
+                        webgl.useProgram(program);
+                        callback(webgl)
+                    }
+                };
+                xhr.send();
+            }
+        }
+    </script>
+</body>
+
+</html>
