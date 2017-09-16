@@ -37,9 +37,12 @@ el.addAttr({
 
 
 var ctx = {
-    renderer: el.renderer.getContext('webgl'),
+    renderer: el.renderer.getContext('webgl')||el.renderer.getContext('experimental-webgl'),
     normalMap: el.normalMap.getContext('2d'),
     mainOutput: el.mainOutput.getContext('2d')
+}
+if(!ctx.renderer){
+    alert('你的浏览器不支持webgl，请使用比较牛逼的chrome谷歌浏览器或者edge浏览器');
 }
 
 var light = {
