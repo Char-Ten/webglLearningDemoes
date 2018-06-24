@@ -1,12 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
+    <script src="./utils/baseHelper.js"></script>
+    <style>
+        canvas {
+            width: 400px;
+            height: 300px;
+        }
+    </style>
 </head>
+
 <body>
-    
+    <canvas id="cvs"></canvas>
+    <script>
+        (function () {
+            var cvs = document.getElementById('cvs');
+
+            /**@type {WebGLRenderingContext} gl*/
+            var gl = cvs.getContext('webgl');
+            var w = cvs.width = cvs.offsetWidth;
+            var h = cvs.height = cvs.offsetHeight;
+            var programs = {};
+
+            var rect = new Float32Array([
+                -1.0, -1.0,
+                1.0, -1.0,
+                -1.0, 1.0,
+                -1.0, 1.0,
+                1.0, -1.0,
+                1.0, 1.0
+            ]);
+
+            var uniforms = {
+                'u_color': { type: 'float', value: [1.0, 0.0, 0.0] }
+            }
+            var attributes = {
+                'a_Position': { type: 'buffer', value: [2, gl.FLOAT, false, 0, 0], bufferData: rect }
+            }
+
+            gl.viewport(0, 0, w, h);
+            gl.clearColor(1.0, 1.0, 1.0, 1.0);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+
+
+
+            $$utils.createProgramByShadersURL(
+                gl,
+                './shaders/v.glsl',
+                './shaders/f.glsl',
+                onProgramLoad
+            );
+
+            function onProgramLoad(program) {
+                programs.test = program;
+                $$utils.setProgramAttribute(gl, program, attributes);
+                $$utils.setProgramUniform(gl, program, uniforms);
+                gl.drawArrays(gl.TRIANGLES, 0, 6)
+            }
+
+            cvs.addEventListener('mousemove', function (e) {
+                if (!programs.test) {
+                    return
+                }
+
+                uniforms['u_mouse'] = { type: 'float', value: [(e.offsetX / w).toFixed(2), (e.offsetY / h).toFixed(2)] }
+                $$utils.setProgramAttribute(gl, programs.test, attributes);
+                $$utils.setProgramUniform(gl, programs.test, uniforms);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 6)
+            })
+
+
+
+        })();
+
+    </script>
 </body>
+
 </html>
