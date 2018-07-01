@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>翻转坐标</title>
+	<script src="../utils/baseHelper.js"></script>
+</head>
+
+<body>
+	<canvas id="cvs"></canvas>
+	<h1>翻转坐标</h1>
+	<p>就是这么简单地将普通的页面像素转成webgl里面的的坐标</p>
+	x:
+	<input id="x" type="range" max=400 min=0 value=0 />
+	<span>0</span>
+	<br/> y:
+	<input id="y" type="range" max=300 min=0 value=0 />
+	<span>0</span>
+	<br/> w:
+	<input id="w" type="range" max=400 min=0 value=100 />
+	<span>100</span>
+	<br/> h:
+	<input id="h" type="range" max=300 min=0 value=100 />
+	<span>100</span>
+	<br/>
+	<script>
+		var values={x:0,y:0,w:100,h:100}
+		document.body.addEventListener("input",function(e){
+			/**@type {HTMLElement}*/
+			var target=e.target;
+			var sib=target.nextElementSibling;
+			var value=target.value;
+			if(sib.nodeName.toLocaleLowerCase()==='span'){
+				sib.innerText=value;
+			}
+			values[target.id]=parseFloat(value);
+			updateRenderer(values.x,values.y,values.w,values.h)
+		})
+	</script>
+	<script src="index.js"></script>
+</body>
+
+</html>
