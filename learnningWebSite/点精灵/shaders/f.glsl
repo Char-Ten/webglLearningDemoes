@@ -23,5 +23,5 @@ void main(){
 	}
 	vec3 mask = vec3(pct);
 	
-	gl_FragColor=vec4(vec3(gl_PointCoord.x)-2.0*mask+vec3(st1.y,st1.x,0.0),1.0);
+	gl_FragColor=vec4(vec3(gl_PointCoord.x)-2.0*mask+vec3(st1.y,st1.x,0.0),1.0-2.0*pct);
 }

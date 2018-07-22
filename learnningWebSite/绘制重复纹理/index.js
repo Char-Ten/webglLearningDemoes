@@ -53,7 +53,8 @@
     }
 
     function onImageLoad(img) {
-		$$utils.createTexByImage(gl,img);
+		var texture=$$utils.createTexByImage(gl,img);
+		gl.bindTexture(gl.TEXTURE_2D, texture);
 		attributes.rect.bufferData=createRectBuffer(0,0,400,300);
 		uniforms.u_image_resolution={type:'float',value:[img.width,img.height]}
 		$$utils.setProgramAttribute(gl,programs.renderImage,attributes);

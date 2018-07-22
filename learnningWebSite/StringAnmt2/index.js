@@ -1,4 +1,211 @@
-(function() {
+(function(root, fn) {
+    if (typeof define === "function" && define.amd) {
+        define(fn);
+    } else if (typeof exports === "object") {
+        module.exports = fn();
+    } else {
+        root.StringAnmt2 = fn();
+    }
+})(this, function() {
+    var attributes = {};
+    var uniform = {};
+    var textures = [];
+	var programs = {};
+	
+    /**
+     *
+     *
+     * @param {Object} conf
+     */
+    function Main(conf) {
+		this.vdo = document.createElement("video");
+		document.body.appendChild(this.vdo)
+        this.cvs = document.getElementById(conf.canvasId);
+        if (!this.cvs) {
+            throw "no canvas";
+        }
+
+        this.gl = this.cvs.getContext("webgl");
+
+        if (!this.gl) {
+            throw "not support webgl";
+        }
+
+        this.text = conf.text || " 一二三十上土王田正回困国囸昌晶";
+        this.fontSize = conf.fontSize || 16;
+        this.fontFamily = conf.fontFamily || "Arial";
+        this.color = conf.color;
+        this.track = null;
+        this.isPlay = false;
+        this.raf = requestAnimationFrame || webkitRequestAnimationFrame;
+        if (!this.raf) {
+            throw "not support requestAnimationFrame";
+        }
+
+        this.cvs.width = addRatio(this.cvs.offsetWidth);
+        this.cvs.height = addRatio(this.cvs.offsetHeight);
+        this.gl.viewport(0, 0, this.cvs.width, this.cvs.height);
+
+        this.textCanvas = createTextTextrue(this.text, this.fontFamily);
+
+		init(this);
+		
+		this.vdo.addEventListener("play",function(){
+			onVdoPlay(this);
+		})
+    }
+
+    Main.prototype = {
+        constructor: Main,
+
+        /**
+         * @method openCamera 开启摄像头
+         * @param {Number} w 摄像头图像宽度
+         * @param {Number} h 摄像头图像高度
+         * @param {Boolean} isAudio 是否录音
+         * @param {Boolean} isBack 是否使用后置摄像头
+         */
+        openCamera: function(w, h, isAudio, isBack) {
+            var _this = this;
+            var facingMode = "user";
+            if (isBack) {
+                facingMode = { exact: "environment" };
+            }
+            var vdo = this.vdo;
+            var constraints = {
+                audio: isAudio,
+                video: {
+                    width: w,
+                    height: h,
+                    facingMode: facingMode
+                }
+            };
+
+            navigator.mediaDevices
+                .getUserMedia(constraints)
+                .then(function(mediaStream) {
+                    _this.track = mediaStream.getTracks()[0];
+                    vdo.srcObject = mediaStream;
+                    vdo.onloadedmetadata = function() {
+                        vdo.play();
+                    };
+                })
+                .catch(function() {
+                    console.error("no support media api or user reject");
+                });
+        },
+
+        /**@method closeCamera 关闭摄像头 */
+        closeCamera: function() {
+            if (this.track) {
+                this.track.stop();
+            }
+        },
+
+        /**@method play 播放动画 */
+        play: function() {
+            this.isPlay = true;
+        },
+
+        /**@method pause 暂停 */
+        pause: function() {
+            this.isPlay = false;
+        },
+
+        /**@method toggle 切换播放状态 */
+        toggle: function() {
+            return (this.isPlay = !this.isPlay);
+        }
+    };
+
+    function init(main) {
+        var _this = main;
+        var cvs = _this.cvs;
+        /**@type {WebGLRenderingContext} */
+        var gl = _this.gl;
+        var points = createSampPoints(
+            _this.cvs.width,
+            _this.cvs.height,
+            _this.fontSize
+        );
+        attributes = {
+            points: { type: "buffer", bufferData: points },
+            a_position: { type: "pointer", value: [2, gl.FLOAT, false, 0, 0] }
+        };
+        uniform = {
+            u_resolution: { type: "float", value: [cvs.width, cvs.height] },
+            u_tex1: { type: "int", value: [0] },
+            u_tex2: { type: "int", value: [1] },
+            u_len: { type: "float", value: [_this.text.length] },
+            u_size: { type: "float", value: [_this.fontSize] }
+		};
+		
+        createProgramByShadersURL(
+            gl,
+            "./shaders/v.glsl",
+            "./shaders/f.glsl",
+            function (program){
+				programs.points=program;
+			}
+        );
+	}
+	
+	function onVdoPlay(){
+
+	}
+
+
+	function render(){
+
+	}
+
+    /**创建采样点 */
+    function createSampPoints(width, height, step) {
+        var a = [];
+
+        for (var i = 0; i <= height; i += step) {
+            for (var j = 0; j <= width; j += step) {
+                a.push(j, i);
+            }
+        }
+        return a;
+    }
+
+    /**
+     * 创建文字纹理
+     * @param {String} text - 要成为纹理的文字
+     * @param {String} fontFamily - 文字的字体
+     * @return {HTMLCanvasElement}
+     */
+    function createTextTextrue(text, fontFamily) {
+        var cvs = document.createElement("canvas");
+        var ctx = cvs.getContext("2d");
+        var len = text.length;
+
+        cvs.width = 32 * text.length;
+        cvs.height = 32;
+
+        ctx.font = "32px " + fontFamily;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        text.split("").forEach(function(word, i) {
+            ctx.fillText(word, i * 32 + 16, 16);
+        });
+
+        // for(var i=0;i<text.length;i++){
+        // 	ctx.strokeRect(i*32,0,32,32)
+        // }
+
+        // document.body.appendChild(cvs);
+
+        return cvs;
+    }
+
+    function addRatio(n) {
+        return n * (window.devicePixelRatio || 1);
+    }
+
     /**
      *网络请求文本数据
      *
@@ -27,12 +234,12 @@
             fss: ""
         };
         getTxt(vssURL, function(txt) {
-			data.vss = txt;
+            data.vss = txt;
             end();
         });
 
         getTxt(fssURL, function(txt) {
-			data.fss = txt;
+            data.fss = txt;
             end();
         });
 
@@ -205,13 +412,13 @@
     }
 
     /**
-	 * 创建纹理贴图
+     * 创建纹理贴图
      * @param {WebGLRenderingContext} gl - 使用webgl的上下文
      * @param {Canvas||Image} image - 要作为纹理的图片对象
      * @return {WebglTexture} texture对象
      */
-    function createTexByImage(gl, image,index) {
-		var texture = gl.createTexture();
+    function createTexByImage(gl, image, index) {
+        var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(
             gl.TEXTURE_2D,
@@ -225,26 +432,10 @@
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             return texture;
         }
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_MIN_FILTER,
-            gl.NEAREST
-        );
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_MAG_FILTER,
-            gl.NEAREST
-        );
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_WRAP_S,
-            gl.CLAMP_TO_EDGE
-        );
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_WRAP_T,
-            gl.CLAMP_TO_EDGE
-        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         return texture;
     }
 
@@ -256,15 +447,11 @@
         return !(value & (value - 1));
     }
 
-    window.$$utils = {
-        getTxt: getTxt,
-        loadGlsl: loadGlsl,
-        createProgram: createProgram,
-        createProgramByShadersURL: createProgramByShadersURL,
-        setProgramAttribute: setProgramAttribute,
-        setProgramUniform: setProgramUniform,
-        createProgram: createProgram,
-		createTexByImage: createTexByImage,
-		isPowerOf2:isPowerOf2
-    };
-})();
+    return Main;
+});
+
+var sa2 = new StringAnmt2({
+    canvasId: "cvs"
+    // text:"ABCD"
+});
+sa2.openCamera(800, 800, true, true);
