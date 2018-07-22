@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>测试X5绘制视频到canvas</title>
+    <style>
+        html,
+        body,
+        canvas {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="cvs"></canvas>
+    <script>
+        var vdo = document.createElement("video");
+        var cvs = document.getElementById("cvs");
+        var ctx = cvs.getContext("2d");    
+        var track=null;
+        cvs.width=cvs.offsetWidth;
+        cvs.height=cvs.offsetHeight
+        run();
+        function run(){
+            ctx.drawImage(vdo,0,0,cvs.width,cvs.height);
+            requestAnimationFrame(run);
+        }
+
+        navigator.mediaDevices
+            .getUserMedia({
+                audio: false,
+                video: {
+                    width: cvs.width,
+                    height: cvs.height,
+                    facingMode: "user"
+                }
+            })
+            .then(function (mediaStream) {
+                track = mediaStream.getTracks()[0];
+                vdo.srcObject = mediaStream;
+                vdo.onloadedmetadata = function () {
+                    vdo.play();
+                };
+            })
+            .catch(function () {
+                console.error("no support media api or user reject");
+            });
+        
+    </script>
+</body>
+
+</html>
