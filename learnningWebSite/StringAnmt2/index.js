@@ -195,6 +195,14 @@
                 raf(loop);
                 return;
             }
+            if(time-lastTime<1000/10){
+                raf(loop);
+                return
+            }
+
+            fps.innerText=(1000/(time-lastTime)).toFixed(1);
+            lastTime=time;
+
             main.gl.activeTexture(main.gl.TEXTURE0);
 			main.gl.bindTexture(main.gl.TEXTURE_2D, textures[0]);
 			main.gl.texImage2D(
@@ -205,8 +213,6 @@
 				main.gl.UNSIGNED_BYTE,
 				main.vdo
 			)
-            // main.gl.activeTexture(main.gl.TEXTURE1);
-            // main.gl.bindTexture(main.gl.TEXTURE_2D, textures[1]);
 
             main.gl.clear(main.gl.COLOR_BUFFER_BIT);
             main.gl.drawArrays(
@@ -214,8 +220,7 @@
                 0,
                 attributes.points.bufferData.length / 2
             );
-            fps.innerText=(1000/(time-lastTime)).toFixed(1);
-            lastTime=time;
+            
             raf(loop);
         }
     }
