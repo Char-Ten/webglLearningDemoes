@@ -19,7 +19,6 @@
      */
     function Main(conf) {
         this.vdo = document.createElement("video");
-        document.body.appendChild(this.vdo);
         this.vdo.style.position = "fixed";
         this.vdo.style.top = 0;
         this.cvs = document.getElementById(conf.canvasId);
