@@ -15,10 +15,9 @@ void main(){
 
 	vec4 text_color = texture2D(u_tex2,vec2(gl_PointCoord.x/u_len +p,gl_PointCoord.y));
 
-	// if(text_color.a!=0.0){
-	// 	text_color=color;
-		
-	// }
+	if(text_color.a!=0.0){
+		text_color=color;
+	}
 
 
 	// gl_FragColor=vec4(vec3(gary),1.0);

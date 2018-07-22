@@ -10,16 +10,18 @@
     var attributes = {};
     var uniform = {};
     var textures = [];
-	var programs = {};
-	
+    var programs = {};
+
     /**
      *
      *
      * @param {Object} conf
      */
     function Main(conf) {
-		this.vdo = document.createElement("video");
-		document.body.appendChild(this.vdo)
+        this.vdo = document.createElement("video");
+        // document.body.appendChild(this.vdo);
+        this.vdo.style.position = "fixed";
+        this.vdo.style.top = 0;
         this.cvs = document.getElementById(conf.canvasId);
         if (!this.cvs) {
             throw "no canvas";
@@ -31,7 +33,7 @@
             throw "not support webgl";
         }
 
-        this.text = conf.text || " 一二三十上土王田正回困国囸昌晶";
+        this.text = conf.text || "丨一二三十上土王田正回困国囸昌晶";
         this.fontSize = conf.fontSize || 16;
         this.fontFamily = conf.fontFamily || "Arial";
         this.color = conf.color;
@@ -45,14 +47,13 @@
         this.cvs.width = addRatio(this.cvs.offsetWidth);
         this.cvs.height = addRatio(this.cvs.offsetHeight);
         this.gl.viewport(0, 0, this.cvs.width, this.cvs.height);
+        this.gl.clearColor(1.0, 1.0, 1.0, 1.0);
 
         this.textCanvas = createTextTextrue(this.text, this.fontFamily);
 
-		init(this);
-		
-		this.vdo.addEventListener("play",function(){
-			onVdoPlay(this);
-		})
+        init(this);
+
+        render(this);
     }
 
     Main.prototype = {
@@ -80,6 +81,8 @@
                     facingMode: facingMode
                 }
             };
+            vdo.width = w;
+            vdo.height = h;
 
             navigator.mediaDevices
                 .getUserMedia(constraints)
@@ -88,6 +91,11 @@
                     vdo.srcObject = mediaStream;
                     vdo.onloadedmetadata = function() {
                         vdo.play();
+                        _this.isVdoPlay = true;
+                        textures = [
+                            createTexByImage(_this.gl, vdo),
+                            createTexByImage(_this.gl, _this.textCanvas)
+                        ];
                     };
                 })
                 .catch(function() {
@@ -129,7 +137,7 @@
             _this.fontSize
         );
         attributes = {
-            points: { type: "buffer", bufferData: points },
+            points: { type: "buffer", bufferData: new Float32Array(points) },
             a_position: { type: "pointer", value: [2, gl.FLOAT, false, 0, 0] }
         };
         uniform = {
@@ -138,26 +146,74 @@
             u_tex2: { type: "int", value: [1] },
             u_len: { type: "float", value: [_this.text.length] },
             u_size: { type: "float", value: [_this.fontSize] }
-		};
-		
+        };
+
         createProgramByShadersURL(
             gl,
             "./shaders/v.glsl",
             "./shaders/f.glsl",
-            function (program){
-				programs.points=program;
-			}
+            function(program) {
+                programs.points = program;
+                _this.gl.useProgram(program);
+            }
         );
-	}
-	
-	function onVdoPlay(){
+    }
+    function render(main) {
+        var raf = main.raf;
 
-	}
+        loop();
+        function loop() {
+            // console.log(programs.points)
+            if (!programs.points) {
+                raf(loop);
+                return;
+            }
+            // console.log(textures.length)
+            if (!textures.length) {
+                raf(loop);
+                return;
+            }
+            if (!main.isVdoPlay) {
+                raf(loop);
+                return;
+            }
+            if (!main.hasInit) {
+				main.hasInit = true;
+				
+                // textures[0] = createTexByImage(main.gl, main.vdo);
+                setProgramAttribute(main.gl, programs.points, attributes);
+                setProgramUniform(main.gl, programs.points, uniform);
+                main.gl.activeTexture(main.gl.TEXTURE0);
+                main.gl.bindTexture(main.gl.TEXTURE_2D, textures[0]);
+                main.gl.activeTexture(main.gl.TEXTURE1);
+                main.gl.bindTexture(main.gl.TEXTURE_2D, textures[1]);
+            }
+            if (!main.isPlay) {
+                raf(loop);
+                return;
+            }
+            main.gl.activeTexture(main.gl.TEXTURE0);
+			main.gl.bindTexture(main.gl.TEXTURE_2D, textures[0]);
+			main.gl.texImage2D(
+				main.gl.TEXTURE_2D,
+				0,
+				main.gl.RGBA,
+				main.gl.RGBA,
+				main.gl.UNSIGNED_BYTE,
+				main.vdo
+			)
+            // main.gl.activeTexture(main.gl.TEXTURE1);
+            // main.gl.bindTexture(main.gl.TEXTURE_2D, textures[1]);
 
-
-	function render(){
-
-	}
+            main.gl.clear(main.gl.COLOR_BUFFER_BIT);
+            main.gl.drawArrays(
+                main.gl.POINTS,
+                0,
+                attributes.points.bufferData.length / 2
+            );
+            raf(loop);
+        }
+    }
 
     /**创建采样点 */
     function createSampPoints(width, height, step) {
@@ -417,7 +473,7 @@
      * @param {Canvas||Image} image - 要作为纹理的图片对象
      * @return {WebglTexture} texture对象
      */
-    function createTexByImage(gl, image, index) {
+    function createTexByImage(gl, image) {
         var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(
@@ -428,6 +484,7 @@
             gl.UNSIGNED_BYTE,
             image
         );
+
         if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             return texture;
@@ -451,7 +508,9 @@
 });
 
 var sa2 = new StringAnmt2({
-    canvasId: "cvs"
-    // text:"ABCD"
+    canvasId: "cvs",
+    // text: " 1234567890",
+    fontSize: 16
 });
-sa2.openCamera(800, 800, true, true);
+sa2.openCamera(800, 800, false, false);
+sa2.play();
