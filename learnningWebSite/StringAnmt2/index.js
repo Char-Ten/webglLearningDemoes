@@ -91,7 +91,7 @@
                     vdo.srcObject = mediaStream;
                     vdo.onloadedmetadata = function() {
                         vdo.play();
-                        // _this.isVdoPlay = true;
+                        _this.isVdoPlay = true;
                         textures = [
                             createTexByImage(_this.gl, vdo),
                             createTexByImage(_this.gl, _this.textCanvas)
@@ -173,7 +173,7 @@
                 raf(loop);
                 return;
             }
-            // if (!main.isVdoPlay) {
+            if (!main.isVdoPlay) {
                 raf(loop);
                 return;
             }
