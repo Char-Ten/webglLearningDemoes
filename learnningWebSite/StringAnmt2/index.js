@@ -264,7 +264,8 @@
     }
 
     function addRatio(n) {
-        return n * (window.devicePixelRatio || 1);
+        return n;
+        // return n * (window.devicePixelRatio || 1);
     }
 
     /**
