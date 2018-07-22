@@ -11,10 +11,13 @@
     var uniform = {};
     var textures = [];
     var programs = {};
+    
+    debug:{
+        var fps=document.getElementById("fps");
+    }
+
 
     /**
-     *
-     *
      * @param {Object} conf
      */
     function Main(conf) {
@@ -159,15 +162,16 @@
     }
     function render(main) {
         var raf = main.raf;
-
+        var lastTime=new Date().getTime();
+       
         loop();
         function loop() {
-            // console.log(programs.points)
+            var time=new Date().getTime();
+            
             if (!programs.points) {
                 raf(loop);
                 return;
             }
-            // console.log(textures.length)
             if (!textures.length) {
                 raf(loop);
                 return;
@@ -210,6 +214,8 @@
                 0,
                 attributes.points.bufferData.length / 2
             );
+            fps.innerText=(1000/(time-lastTime)).toFixed(1);
+            lastTime=time;
             raf(loop);
         }
     }
@@ -508,8 +514,8 @@
 
 var sa2 = new StringAnmt2({
     canvasId: "cvs",
-    // text: " 1234567890",
-    fontSize: 16
+    text: " 一生世",
+    fontSize: 32
 });
 sa2.openCamera(800, 800, false, false);
 sa2.play();

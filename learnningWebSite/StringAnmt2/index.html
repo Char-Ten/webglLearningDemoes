@@ -15,11 +15,19 @@
 			padding:0;
 			overflow: hidden;
 		}
+		#fps{
+			position: fixed;
+			top:0;
+			padding:20px;
+			background: rgba(0,0,0,.5);
+			color:#fff;
+		}
 	</style>
 </head>
 
 <body>
 	<canvas id="cvs"></canvas>
+	<div id="fps">60</div>
 	<script>(function () { var script = document.createElement('script'); script.src="//cdn.jsdelivr.net/npm/eruda"; document.body.appendChild(script); script.onload = function () { eruda.init() } })();</script>
 	<script src="index.js"></script>
 </body>
