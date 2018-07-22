@@ -200,7 +200,7 @@
                 return
             }
 
-            fps.innerText=(1000/(time-lastTime)).toFixed(1);
+            fps.innerText=(1000/(time-lastTime)).toFixed(1)+','+attributes.points.bufferData.length / 2;
             lastTime=time;
 
             main.gl.activeTexture(main.gl.TEXTURE0);
