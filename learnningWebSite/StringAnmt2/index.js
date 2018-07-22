@@ -19,7 +19,7 @@
      */
     function Main(conf) {
         this.vdo = document.createElement("video");
-        // document.body.appendChild(this.vdo);
+        document.body.appendChild(this.vdo);
         this.vdo.style.position = "fixed";
         this.vdo.style.top = 0;
         this.cvs = document.getElementById(conf.canvasId);
@@ -91,7 +91,7 @@
                     vdo.srcObject = mediaStream;
                     vdo.onloadedmetadata = function() {
                         vdo.play();
-                        _this.isVdoPlay = true;
+                        // _this.isVdoPlay = true;
                         textures = [
                             createTexByImage(_this.gl, vdo),
                             createTexByImage(_this.gl, _this.textCanvas)
@@ -173,7 +173,7 @@
                 raf(loop);
                 return;
             }
-            if (!main.isVdoPlay) {
+            // if (!main.isVdoPlay) {
                 raf(loop);
                 return;
             }
