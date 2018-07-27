@@ -150,7 +150,7 @@
             }
             setProgramUniform(gl, programs.points, uniform);
             gl.activeTexture(gl.TEXTURE1);
-            gl.bindTexture(main.gl.TEXTURE_2D, textures[1]);
+            gl.bindTexture(gl.TEXTURE_2D, textures[1]);
             gl.texImage2D(
                 gl.TEXTURE_2D,
                 0,
@@ -159,6 +159,14 @@
                 gl.UNSIGNED_BYTE,
                 this.textCanvas
             );
+            if (isPowerOf2(this.textCanvas.width) && isPowerOf2(this.textCanvas.height)) {
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+                return
+            }
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         },
 
         /**
@@ -177,26 +185,28 @@
                 this.fontSize
             );
 
-            attributes.points.bufferData = new Float32Array(points);
             if (!programs.points) {
                 return;
             }
-            if (attributes.points) {
+            if (!attributes.points) {
                 return;
             }
+            attributes.points.bufferData = new Float32Array(points);
+            uniform.u_size.value[0]=this.fontSize;
+            setProgramUniform(gl,programs.points,uniform);
             setProgramAttribute(gl, programs.points, attributes);
 		},
 		
 		/** */
 		updateStyle:function(conf){
-			this.type=conf.type||2;
-			this.color=conf.color||[0,0,0,1];
+			this.type=conf.type||this.type;
+			this.color=conf.color||this.color;
 			if(!programs.points){
 				return
 			}
 			var gl=this.gl;
-			uniform.u_type.value=[this.type];
-			uniform.u_color.value=this.color;
+			uniform.u_type.value[0]=this.type;
+            uniform.u_color.value=this.color;
 			setProgramUniform(gl,programs.points,uniform);
 		}
     };
