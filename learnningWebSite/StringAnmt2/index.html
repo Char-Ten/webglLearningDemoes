@@ -23,6 +23,12 @@
 			padding: 20px;
 			background: rgba(0, 0, 0, .5);
 			color: #fff;
+			font-size: 12px;
+		}
+
+		#fps input {
+			font-size: 12px;
+			width: 60px;
 		}
 	</style>
 </head>
@@ -32,19 +38,39 @@
 	<div id="fps">
 		<div>
 			颜色：
-			<input type="color" />
+			<input id="color" type="color" />
 		</div>
 		<div>
 			类型：
-			<select>
-				<option>0</option>
-				<option>1</option>
-				<option>2</option>
+			<select id="type">
+				<option value="0">单色</option>
+				<option value="1" selected="selected">采样色</option>
+				<option value="2">采样渐变色</option>
 			</select>
 		</div>
+		<div>
+			文字：
+			<input id="text" type="text" />
+		</div>
+		<div>
+			字体大小：
+			<input id="fontSize" type="range" min="16" max="64" value="16" />
+		</div>
+
 	</div>
 	<script>(function () { var script = document.createElement('script'); script.src = "//cdn.jsdelivr.net/npm/eruda"; document.body.appendChild(script); script.onload = function () { eruda.init() } })();</script>
 	<script src="index.js"></script>
+	<script>
+		var sa2 = new StringAnmt2({
+			canvasId: "cvs",
+			text: "一生世你我爱",
+			fontSize: 16,
+			color: [1, 0, 0],
+			type: 2
+		});
+		sa2.openCamera(800, 800, false, false);
+		sa2.play();
+	</script>
 </body>
 
 </html>
