@@ -29,6 +29,7 @@
 		#fps input {
 			font-size: 12px;
 			width: 60px;
+			vertical-align: middle;
 		}
 	</style>
 </head>
@@ -38,38 +39,76 @@
 	<div id="fps">
 		<div>
 			颜色：
-			<input id="color" type="color" />
+			<input id="color" type="color" value="#000000"/>
 		</div>
 		<div>
 			类型：
 			<select id="type">
-				<option value="0">单色</option>
-				<option value="1" selected="selected">采样色</option>
-				<option value="2">采样渐变色</option>
+				<option value="1">单色</option>
+				<option value="2" selected="selected">采样色</option>
+				<option value="3">采样渐变色</option>
 			</select>
 		</div>
 		<div>
 			文字：
-			<input id="text" type="text" />
+			<input id="text" style="width:100px" type="text" />
 		</div>
 		<div>
 			字体大小：
 			<input id="fontSize" type="range" min="16" max="64" value="16" />
+			<b id="fontSizeValue">16</b>
 		</div>
 
 	</div>
 	<script>(function () { var script = document.createElement('script'); script.src = "//cdn.jsdelivr.net/npm/eruda"; document.body.appendChild(script); script.onload = function () { eruda.init() } })();</script>
 	<script src="index.js"></script>
 	<script>
+		var fontSizeInputer=document.querySelector("#fontSize");
+		var fontSizeValue=document.querySelector("#fontSizeValue");
+		var typeSelector = document.querySelector("#type");
+		var colorInputer = document.querySelector("#color");
+		var textInputer = document.querySelector("#text");
 		var sa2 = new StringAnmt2({
 			canvasId: "cvs",
-			text: "一生世你我爱",
+			// text: "一生世你我爱",
 			fontSize: 16,
-			color: [1, 0, 0],
+			color: [0,0,0],
 			type: 2
 		});
 		sa2.openCamera(800, 800, false, false);
 		sa2.play();
+
+		fontSizeInputer.addEventListener("input",function(e){
+			fontSizeValue.textContent=e.target.value;
+			sa2.updateFontSize(parseInt(e.target.value))
+		});
+
+		typeSelector.addEventListener("change",function(e){
+			sa2.updateStyle({
+				type:parseInt(e.target.value)
+			});
+		});
+
+		colorInputer.addEventListener("change",function(e){
+			var c=hex2rgb(e.target.value);
+			sa2.updateStyle({
+				color:c
+			})
+		});
+
+		textInputer.addEventListener("change",function(e){
+			sa2.updateText(e.target.value)
+		})
+
+		function hex2rgb(value){
+			var a=[];
+			value=value.replace("#","");
+			for(var i = 0;i<3;i++){
+				a[i]=parseInt(value[2*i]+value[2*i+1],16)*100/255;
+				a[i]=Math.floor(a[i])/100
+			}
+			return a;
+		}
 	</script>
 </body>
 
