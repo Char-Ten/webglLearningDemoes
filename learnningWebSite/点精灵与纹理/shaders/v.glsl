@@ -14,7 +14,7 @@ void main(){
 	
 	v_position=zeroToOne;
 	
-	gl_PointSize=16.0;
+	gl_PointSize=32.0;
 
 	gl_Position=vec4(clipSpace*vec2(1,-1),0.0,1.0);
 }

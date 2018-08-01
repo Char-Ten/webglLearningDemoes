@@ -7,5 +7,5 @@ void main(){
 	vec4 color = texture2D(u_tex1,v_position);
 	vec4 source_color = texture2D(u_tex1,vec2(gl_FragCoord.x,u_resolution.y-gl_FragCoord.y)/u_resolution);
 
-	gl_FragColor=source_color;
+	gl_FragColor=color;
 }

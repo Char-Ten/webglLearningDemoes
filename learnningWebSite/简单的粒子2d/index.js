@@ -117,7 +117,8 @@
         draw();
     });
 
-    cvs.width = 400;
+	cvs.width = 400;
+	
     cvs.height = 300;
 
     cvs.addEventListener("mousemove", function(e) {
