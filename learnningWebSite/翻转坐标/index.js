@@ -35,6 +35,11 @@
         onProgramLoaded
     );
 
+    /**
+     *
+     *
+     * @param {WebGLProgram} program
+     */
     function onProgramLoaded(program) {
         programs.setCoord = program;
         gl.useProgram(programs.setCoord);
