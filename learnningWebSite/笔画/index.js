@@ -252,7 +252,8 @@ function createStepPoints(x, y, prevX, prevY) {
 	var vec = new Vec2(x - prevX, y - prevY);
 	
 	lstAng=vec.angle;
-	r = 30 / (vec.norm + 2) + 5;
+	// r = 30 / (vec.norm + 2) + 5;
+	r=5+2/(vec.norm+1);
 	var offset =- Math.PI / 8;
 
 	return [
