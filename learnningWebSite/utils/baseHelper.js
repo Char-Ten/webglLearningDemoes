@@ -27,12 +27,12 @@
             fss: ""
         };
         getTxt(vssURL, function(txt) {
-			data.vss = txt;
+            data.vss = txt;
             end();
         });
 
         getTxt(fssURL, function(txt) {
-			data.fss = txt;
+            data.fss = txt;
             end();
         });
 
@@ -205,13 +205,13 @@
     }
 
     /**
-	 * 创建纹理贴图
+     * 创建纹理贴图
      * @param {WebGLRenderingContext} gl - 使用webgl的上下文
      * @param {Canvas||Image} image - 要作为纹理的图片对象
      * @return {WebglTexture} texture对象
      */
-    function createTexByImage(gl, image,index) {
-		var texture = gl.createTexture();
+    function createTexByImage(gl, image, index) {
+        var texture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, texture);
         gl.texImage2D(
             gl.TEXTURE_2D,
@@ -221,30 +221,48 @@
             gl.UNSIGNED_BYTE,
             image
         );
-        if (isPowerOf2(image.width) && isPowerOf2(image.height)) {
+        return checkTexture(gl, texture, image.width, image.height);
+    }
+
+    /**
+     * 更新纹理贴图
+     * @param {WebGLRenderingContext} gl - 使用webgl的上下文
+	 * @param {Number} index - 纹理索引 gl.TEXTURE0
+     * @param {WebglTexture} texture - 要作为纹理的图片对象
+     * @param {Canvas||Image} image - 要作为纹理的图片对象
+     * @return {WebglTexture} texture对象
+     */
+    function updateTexture(gl, index, texture, image) {
+        gl.activeTexture(index);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            image
+		);
+		return checkTexture(gl,texture,image.width,image.height);
+    }
+
+    /**
+     * 检查纹理贴图
+     * @param {WebGLRenderingContext} gl - 使用webgl的上下文
+     * @param {WebglTexture} texture - 纹理对象
+     * @param {Number} width - 宽度
+     * @param {Number} height - 高度
+     * @return {WebglTexture} texture对象
+     */
+    function checkTexture(gl, texture, width, height) {
+        if (isPowerOf2(width) && isPowerOf2(height)) {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
             return texture;
         }
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_MIN_FILTER,
-            gl.NEAREST
-        );
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_MAG_FILTER,
-            gl.NEAREST
-        );
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_WRAP_S,
-            gl.CLAMP_TO_EDGE
-        );
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_WRAP_T,
-            gl.CLAMP_TO_EDGE
-        );
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         return texture;
     }
 
@@ -264,7 +282,9 @@
         setProgramAttribute: setProgramAttribute,
         setProgramUniform: setProgramUniform,
         createProgram: createProgram,
-		createTexByImage: createTexByImage,
-		isPowerOf2:isPowerOf2
+        createTexByImage: createTexByImage,
+		isPowerOf2: isPowerOf2,
+		updateTexture:updateTexture,
+		checkTexture:checkTexture,
     };
 })();
